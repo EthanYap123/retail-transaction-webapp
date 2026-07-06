@@ -1,0 +1,85 @@
+/* Name: Yap Kai Jun Ethan
+   Class: DIT/1B/07
+   Admin Number: P2523752 */
+
+/* Reset and base styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  color: #333;
+}
+
+/* Page header */
+h1 {
+  text-align: center;
+  padding: 20px;
+  background: #4a90e2;
+  color: white;
+  margin: 0;
+  font-size: 24px;
+}
+
+/* Section headers */
+h2, h3 {
+  color: #2c3e50;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* Navigation bar */
+nav {
+  text-align: center;
+  margin: 20px 0;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav li {
+  display: inline-block;
+  margin: 0 10px;
+}
+
+nav button {
+  padding: 10px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  background: #4a90e2;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+nav button:hover {
+  background: #357ab8;
+}
+
+/* Dropdown menu */
+select {
+  display: block;
+  margin: 0 auto 20px auto;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Output area */
+main#output {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* TransactionCard spacing (component styles are inside webComponent.js) */
+transaction-card {
+  display: block;
+  margin-bottom: 12px;
+}

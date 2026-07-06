@@ -1,0 +1,133 @@
+<!-- Name: Yap Kai Jun Ethan -->
+<!-- Class: DIT/1B/07 -->
+<!-- Admin Number: P2523752 -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Retail Transaction WebApp</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Retail Transaction Web Application</h1>
+
+    <!-- Navigation -->
+    <nav>
+      <ul>
+        <li><button id="btnData">View Retail Transaction Data</button></li>
+        <li><button id="btnPayment">View by Payment Method</button></li>
+      </ul>
+    </nav>
+
+    <!-- Output area -->
+    <main id="output">
+      <!-- Results will be displayed here -->
+    </main>
+
+    <!-- Load Web Component -->
+    <script src="webComponent.js"></script>
+
+    <script>
+      const BASE_URL = "http://localhost:8081";
+      const output = document.getElementById("output");
+
+      // View 1: Retail Transaction Data
+      document.getElementById("btnData").addEventListener("click", async () => {
+        try {
+          const res = await fetch(`${BASE_URL}/retailData5`);
+          const data = await res.json();
+
+          output.innerHTML = "<h2>First 5 Records (Sorted by CustomerID)</h2>";
+
+          data
+            .sort((a, b) => a.customerID - b.customerID)
+            .forEach((record) => {
+              const card = document.createElement("transaction-card");
+              card.setAttribute("customerid", record.customerID);
+              card.setAttribute("price", record.price);
+              card.setAttribute("paymentmethod", record.paymentMethod);
+              card.setAttribute("totalamount", record.totalAmount);
+              output.appendChild(card);
+            });
+        } catch (err) {
+          output.innerHTML = `<p>Error loading data: ${err.message}</p>`;
+        }
+      });
+
+      // View 2: Payment Method Selection
+      document
+        .getElementById("btnPayment")
+        .addEventListener("click", async () => {
+          output.innerHTML = "<h2>Select a Payment Method</h2>";
+
+          try {
+            // Explicit mapping in desired order
+            const paymentMap = {
+              Cash: "cash",
+              "Credit Card": "credit-card",
+              "Debit Card": "debit-card",
+              PayPal: "paypal",
+            };
+
+            // Always clear before appending
+            const select = document.createElement("select");
+            select.id = "paymentSelect";
+
+            // Add placeholder once at the top
+            select.innerHTML =
+              `<option value="">-- Choose --</option>` +
+              Object.keys(paymentMap)
+                .map(
+                  (label) =>
+                    `<option value="${paymentMap[label]}">${label}</option>`,
+                )
+                .join("");
+
+            output.appendChild(select);
+
+            const resultArea = document.createElement("div");
+            resultArea.id = "paymentResults";
+            output.appendChild(resultArea);
+
+            select.addEventListener("change", async () => {
+              const method = select.value;
+              resultArea.innerHTML = "";
+
+              if (!method) return;
+
+              try {
+                const res = await fetch(
+                  `${BASE_URL}/byPaymentMethod/${encodeURIComponent(method)}`,
+                );
+                const data = await res.json();
+
+                if (data.length === 0) {
+                  resultArea.innerHTML = `<p>No records found for "${method}"</p>`;
+                  return;
+                }
+
+                const sorted = data
+                  .sort((a, b) => b.totalAmount - a.totalAmount)
+                  .slice(0, 5);
+
+                resultArea.innerHTML = `<h3>Top 5 Records by Total Amount (${method})</h3>`;
+                sorted.forEach((record) => {
+                  const card = document.createElement("transaction-card");
+                  card.setAttribute("customerid", record.customerID);
+                  card.setAttribute("price", record.price);
+                  card.setAttribute("paymentmethod", record.paymentMethod);
+                  card.setAttribute("totalamount", record.totalAmount);
+                  resultArea.appendChild(card);
+                });
+              } catch (err) {
+                resultArea.innerHTML = `<p>Error loading records: ${err.message}</p>`;
+              }
+            });
+          } catch (err) {
+            output.innerHTML = `<p>Error loading payment methods: ${err.message}</p>`;
+          }
+        });
+    </script>
+  </body>
+</html>

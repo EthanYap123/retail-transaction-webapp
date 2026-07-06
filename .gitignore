@@ -1,0 +1,19 @@
+# Academic docs, zips and rubrics
+*.docx
+*.pdf
+*.zip
+2523752_EthanYap/
+
+# Dependency directories
+node_modules/
+webapp/node_modules/
+server/node_modules/
+
+# Environment files
+.env
+
+# System & OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+._*
