@@ -17,3 +17,6 @@ server/node_modules/
 Thumbs.db
 desktop.ini
 ._*
+
+# Built from server/data/retailTransaction.csv by `npm run build:data`
+webapp/data/
