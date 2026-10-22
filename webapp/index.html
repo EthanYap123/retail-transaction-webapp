@@ -1,133 +1,420 @@
+<!doctype html>
 <!-- Name: Yap Kai Jun Ethan -->
 <!-- Class: DIT/1B/07 -->
 <!-- Admin Number: P2523752 -->
-
-<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Retail Transaction WebApp</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta name="description" content="Interactive dashboard for 100,000 retail transactions: KPIs, trends, filtering, export and transaction logging." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M9 22V14M16 22V9M23 22v-5' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script>
+      // Apply the saved theme before first paint to avoid a flash
+      try {
+        const theme = localStorage.getItem('retail-webapp.theme');
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script type="module" src="js/app.js"></script>
   </head>
-  <body>
-    <h1>Retail Transaction Web Application</h1>
+  <body class="is-loading">
+    <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- Navigation -->
-    <nav>
-      <ul>
-        <li><button id="btnData">View Retail Transaction Data</button></li>
-        <li><button id="btnPayment">View by Payment Method</button></li>
-      </ul>
-    </nav>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#dashboard">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M6 18v-6M12 18V6M18 18v-4" /></svg>
+          </span>
+          <span class="brand-text">
+            <strong>Retail Transactions</strong>
+            <small>Sales analytics dashboard</small>
+          </span>
+        </a>
 
-    <!-- Output area -->
-    <main id="output">
-      <!-- Results will be displayed here -->
+        <nav class="nav" aria-label="Main">
+          <a href="#dashboard" data-nav="dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 4v4h6V4zM4 20h6v-3H4z" /></svg>
+            Dashboard
+          </a>
+          <a href="#transactions" data-nav="transactions">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+            Transactions
+          </a>
+          <a href="#log" data-nav="log">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            Log transaction
+            <span class="nav-count" id="nav-log-count"></span>
+          </a>
+        </nav>
+
+        <button type="button" class="icon-button theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Switch to dark mode">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" /></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main" class="page">
+      <!-- Shared filters: apply to the dashboard and the table -->
+      <form class="filters card" id="filters" aria-label="Filter transactions">
+        <div class="filters-head">
+          <h2 class="filters-title">Filters <span class="pill" data-active-count></span></h2>
+          <p class="filters-summary" id="filter-summary" aria-live="polite">Loading…</p>
+          <button type="reset" class="button button-ghost button-sm" disabled>Reset</button>
+          <button type="button" class="button button-sm filters-toggle" aria-expanded="false" aria-controls="filters-grid">Show</button>
+        </div>
+        <div class="filters-grid" id="filters-grid">
+          <label class="field field-search">
+            <span class="field-label">Search</span>
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" /></svg>
+              <input type="search" name="search" placeholder="Customer ID, transaction no. or address" autocomplete="off" />
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">From</span>
+            <input type="date" name="from" />
+          </label>
+          <label class="field">
+            <span class="field-label">To</span>
+            <input type="date" name="to" />
+          </label>
+          <label class="field">
+            <span class="field-label">Payment method</span>
+            <select name="paymentMethod"><option value="">All payment methods</option></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Category</span>
+            <select name="productCategory"><option value="">All categories</option></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Product</span>
+            <select name="productID"><option value="">All products</option></select>
+          </label>
+          <label class="field">
+            <span class="field-label">State</span>
+            <select name="state"><option value="">All states</option></select>
+          </label>
+          <div class="field">
+            <span class="field-label" id="amount-label">Total amount ($)</span>
+            <div class="range" role="group" aria-labelledby="amount-label">
+              <input type="number" name="minTotal" min="0" step="any" placeholder="Min" aria-label="Minimum total amount" />
+              <span aria-hidden="true">–</span>
+              <input type="number" name="maxTotal" min="0" step="any" placeholder="Max" aria-label="Maximum total amount" />
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Dashboard -->
+      <section id="view-dashboard" class="view" aria-labelledby="dashboard-heading">
+        <div class="view-head">
+          <div>
+            <h1 id="dashboard-heading">Sales overview</h1>
+            <p class="view-sub">Click a bar to filter by it. Everything on this page follows the filters above.</p>
+          </div>
+        </div>
+
+        <div class="empty-state card" id="dashboard-empty" hidden>
+          <h2>No transactions match these filters</h2>
+          <p>Try widening the date range or resetting the filters.</p>
+        </div>
+
+        <div id="dashboard-content">
+          <div class="kpis" id="kpis"></div>
+
+          <article class="card chart-card">
+            <header class="card-head">
+              <div>
+                <h2 class="card-title" id="trend-title">Revenue by month</h2>
+                <p class="card-sub" id="trend-range"></p>
+              </div>
+              <div class="card-tools">
+                <div class="segmented" data-segment="metric" role="group" aria-label="Metric">
+                  <button type="button" data-value="revenue" aria-pressed="true">Revenue</button>
+                  <button type="button" data-value="count" aria-pressed="false">Transactions</button>
+                  <button type="button" data-value="aov" aria-pressed="false">Avg order</button>
+                </div>
+                <div class="segmented" data-segment="interval" role="group" aria-label="Interval">
+                  <button type="button" data-value="month" aria-pressed="true">Month</button>
+                  <button type="button" data-value="week" aria-pressed="false">Week</button>
+                </div>
+              </div>
+            </header>
+            <div class="chart chart-tall"><canvas id="trend-chart" aria-label="Trend chart" role="img"></canvas></div>
+            <p class="card-foot"><span class="dash-key" aria-hidden="true"></span> Dashed segments are periods only partly covered by the data.</p>
+          </article>
+
+          <div class="grid-3">
+            <article class="card chart-card">
+              <header class="card-head">
+                <h2 class="card-title">Revenue by category</h2>
+              </header>
+              <div class="chart"><canvas id="category-chart" aria-label="Revenue by category" role="img"></canvas></div>
+            </article>
+            <article class="card chart-card">
+              <header class="card-head">
+                <h2 class="card-title">Revenue by payment method</h2>
+              </header>
+              <div class="chart"><canvas id="payment-chart" aria-label="Revenue by payment method" role="img"></canvas></div>
+            </article>
+            <article class="card chart-card">
+              <header class="card-head">
+                <h2 class="card-title">Top 10 states &amp; territories</h2>
+              </header>
+              <div class="chart chart-states"><canvas id="state-chart" aria-label="Top 10 states by revenue" role="img"></canvas></div>
+            </article>
+          </div>
+
+          <div class="grid-2">
+            <article class="card">
+              <header class="card-head">
+                <div>
+                  <h2 class="card-title">When customers buy</h2>
+                  <p class="card-sub">Transactions by day of week and hour</p>
+                </div>
+              </header>
+              <div class="heatmap-wrap">
+                <div class="heatmap" id="heatmap"></div>
+              </div>
+              <div class="heat-legend" aria-hidden="true">
+                <span id="heat-min"></span><span class="heat-scale"></span><span id="heat-max"></span>
+                <span>transactions per hour slot</span>
+              </div>
+              <p class="card-foot" id="heatmap-readout" aria-live="polite"></p>
+            </article>
+
+            <article class="card">
+              <header class="card-head">
+                <div>
+                  <h2 class="card-title">Top 5 transactions</h2>
+                  <p class="card-sub">Highest total amount</p>
+                </div>
+                <label class="card-tools">
+                  <span class="visually-hidden">Payment method</span>
+                  <select id="top-method" class="select-sm"></select>
+                </label>
+              </header>
+              <div class="top-list" id="top-list"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transactions table -->
+      <section id="view-transactions" class="view" aria-labelledby="transactions-heading" hidden>
+        <div class="view-head">
+          <div>
+            <h1 id="transactions-heading">Transactions</h1>
+            <p class="view-sub">Click a column to sort and a row for full details. Exports include every filtered row.</p>
+          </div>
+          <div class="button-row">
+            <button type="button" class="button" data-export="csv">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+              Export CSV
+            </button>
+            <button type="button" class="button" data-export="json">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+              Export JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead id="table-head"></thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+          <p class="empty-note" id="table-empty" hidden>No transactions match these filters.</p>
+          <footer class="table-foot">
+            <span id="table-count"></span>
+            <label class="page-size">
+              Rows
+              <select id="page-size" class="select-sm">
+                <option>25</option>
+                <option>50</option>
+                <option>100</option>
+              </select>
+            </label>
+            <div class="pager">
+              <button type="button" class="icon-button" id="page-prev" aria-label="Previous page">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+              </button>
+              <span id="page-label"></span>
+              <button type="button" class="icon-button" id="page-next" aria-label="Next page">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+              </button>
+            </div>
+          </footer>
+        </div>
+      </section>
+
+      <!-- Log a new transaction -->
+      <section id="view-log" class="view" aria-labelledby="log-heading" hidden>
+        <div class="view-head">
+          <div>
+            <h1 id="log-heading">Log a transaction</h1>
+            <p class="view-sub">New transactions are saved in this browser and appear in the dashboard and table straight away.</p>
+          </div>
+        </div>
+
+        <div class="log-layout">
+          <form class="card log-form" id="log-form" novalidate>
+            <fieldset>
+              <legend>Customer &amp; product</legend>
+              <div class="form-grid">
+                <label class="field">
+                  <span class="field-label">Customer ID</span>
+                  <input name="customerID" inputmode="numeric" required pattern="[0-9]{1,6}" data-pattern-message="Use 1 to 6 digits." placeholder="e.g. 109318" />
+                  <span class="field-error" data-error-for="customerID"></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Product ID</span>
+                  <select name="productID" required></select>
+                  <span class="field-error" data-error-for="productID"></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Category</span>
+                  <select name="productCategory" required></select>
+                  <span class="field-error" data-error-for="productCategory"></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Date &amp; time</span>
+                  <input type="datetime-local" name="transactionDate" required aria-describedby="log-date-hint" />
+                  <span class="field-hint" id="log-date-hint"></span>
+                  <span class="field-error" data-error-for="transactionDate"></span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Payment</legend>
+              <div class="form-grid">
+                <label class="field">
+                  <span class="field-label">Quantity</span>
+                  <input type="number" name="quantity" required min="1" max="100" step="1" data-step-message="Use a whole number." placeholder="1" />
+                  <span class="field-error" data-error-for="quantity"></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Unit price ($)</span>
+                  <input type="number" name="price" required min="0.01" max="100000" step="0.01" placeholder="0.00" />
+                  <span class="field-error" data-error-for="price"></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Discount (%)</span>
+                  <input type="number" name="discount" min="0" max="100" step="0.01" placeholder="0" />
+                  <span class="field-error" data-error-for="discount"></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Payment method</span>
+                  <select name="paymentMethod" required></select>
+                  <span class="field-error" data-error-for="paymentMethod"></span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Store location</legend>
+              <div class="form-grid">
+                <label class="field field-wide">
+                  <span class="field-label">Street address</span>
+                  <input name="street" required maxlength="80" autocomplete="off" placeholder="e.g. 176 Andrew Cliffs" />
+                  <span class="field-error" data-error-for="street"></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">City</span>
+                  <input name="city" required maxlength="40" autocomplete="off" placeholder="e.g. Baileyfort" />
+                  <span class="field-error" data-error-for="city"></span>
+                </label>
+                <div class="form-pair">
+                  <label class="field">
+                    <span class="field-label">State</span>
+                    <select name="state" required></select>
+                    <span class="field-error" data-error-for="state"></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">ZIP</span>
+                    <input name="zip" required inputmode="numeric" pattern="[0-9]{5}" data-pattern-message="Use 5 digits." placeholder="93354" />
+                    <span class="field-error" data-error-for="zip"></span>
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+
+            <div class="log-summary">
+              <div>
+                <p class="field-label">Total amount</p>
+                <p class="log-total-value" id="log-total" aria-live="polite">—</p>
+                <p class="card-sub" id="log-total-detail"></p>
+              </div>
+              <div class="button-row">
+                <button type="button" class="button button-ghost" id="log-sample">Fill sample</button>
+                <button type="reset" class="button button-ghost">Clear</button>
+                <button type="submit" class="button button-primary">Save transaction</button>
+              </div>
+            </div>
+          </form>
+
+          <aside class="card logs-card" aria-labelledby="logs-heading">
+            <header class="card-head">
+              <h2 class="card-title" id="logs-heading">Saved in this browser <span class="pill" id="logs-count">0</span></h2>
+            </header>
+            <p class="empty-note" id="logs-empty">No transactions logged yet. Saved ones appear here.</p>
+            <ul class="logs-list" id="logs-list"></ul>
+            <div class="button-row" id="logs-actions" hidden>
+              <button type="button" class="button button-sm" id="logs-export-csv">Export CSV</button>
+              <button type="button" class="button button-sm" id="logs-export-json">Export JSON</button>
+              <button type="button" class="button button-sm button-danger" id="logs-clear">Delete all</button>
+            </div>
+          </aside>
+        </div>
+      </section>
     </main>
 
-    <!-- Load Web Component -->
-    <script src="webComponent.js"></script>
+    <footer class="site-foot">
+      <p>Retail Transaction WebApp · Dataset of 100,000 transactions (Apr 2023 – Apr 2024)</p>
+      <p><a href="https://github.com/EthanYap123/retail-transaction-webapp">Source on GitHub</a></p>
+    </footer>
 
-    <script>
-      const BASE_URL = "http://localhost:8081";
-      const output = document.getElementById("output");
+    <!-- Loading and error states -->
+    <div class="loader" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>Loading 100,000 transactions…</p>
+    </div>
+    <div class="load-error card" role="alert">
+      <h2>Could not load the dataset</h2>
+      <p id="load-error-message"></p>
+      <p>Run <code>npm run build:data</code> in the <code>server</code> folder, or start the server with <code>npm start</code>.</p>
+    </div>
 
-      // View 1: Retail Transaction Data
-      document.getElementById("btnData").addEventListener("click", async () => {
-        try {
-          const res = await fetch(`${BASE_URL}/retailData5`);
-          const data = await res.json();
+    <dialog class="dialog" id="record-dialog" aria-labelledby="dialog-title">
+      <form method="dialog">
+        <header class="dialog-head">
+          <div>
+            <h2 id="dialog-title">Transaction</h2>
+            <p class="card-sub" id="dialog-source"></p>
+          </div>
+          <button class="icon-button" value="close" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </header>
+        <dl class="details" id="dialog-body"></dl>
+        <footer class="dialog-foot">
+          <button type="button" class="button button-danger" id="dialog-delete" hidden>Delete log</button>
+          <button class="button" value="close">Close</button>
+        </footer>
+      </form>
+    </dialog>
 
-          output.innerHTML = "<h2>First 5 Records (Sorted by CustomerID)</h2>";
-
-          data
-            .sort((a, b) => a.customerID - b.customerID)
-            .forEach((record) => {
-              const card = document.createElement("transaction-card");
-              card.setAttribute("customerid", record.customerID);
-              card.setAttribute("price", record.price);
-              card.setAttribute("paymentmethod", record.paymentMethod);
-              card.setAttribute("totalamount", record.totalAmount);
-              output.appendChild(card);
-            });
-        } catch (err) {
-          output.innerHTML = `<p>Error loading data: ${err.message}</p>`;
-        }
-      });
-
-      // View 2: Payment Method Selection
-      document
-        .getElementById("btnPayment")
-        .addEventListener("click", async () => {
-          output.innerHTML = "<h2>Select a Payment Method</h2>";
-
-          try {
-            // Explicit mapping in desired order
-            const paymentMap = {
-              Cash: "cash",
-              "Credit Card": "credit-card",
-              "Debit Card": "debit-card",
-              PayPal: "paypal",
-            };
-
-            // Always clear before appending
-            const select = document.createElement("select");
-            select.id = "paymentSelect";
-
-            // Add placeholder once at the top
-            select.innerHTML =
-              `<option value="">-- Choose --</option>` +
-              Object.keys(paymentMap)
-                .map(
-                  (label) =>
-                    `<option value="${paymentMap[label]}">${label}</option>`,
-                )
-                .join("");
-
-            output.appendChild(select);
-
-            const resultArea = document.createElement("div");
-            resultArea.id = "paymentResults";
-            output.appendChild(resultArea);
-
-            select.addEventListener("change", async () => {
-              const method = select.value;
-              resultArea.innerHTML = "";
-
-              if (!method) return;
-
-              try {
-                const res = await fetch(
-                  `${BASE_URL}/byPaymentMethod/${encodeURIComponent(method)}`,
-                );
-                const data = await res.json();
-
-                if (data.length === 0) {
-                  resultArea.innerHTML = `<p>No records found for "${method}"</p>`;
-                  return;
-                }
-
-                const sorted = data
-                  .sort((a, b) => b.totalAmount - a.totalAmount)
-                  .slice(0, 5);
-
-                resultArea.innerHTML = `<h3>Top 5 Records by Total Amount (${method})</h3>`;
-                sorted.forEach((record) => {
-                  const card = document.createElement("transaction-card");
-                  card.setAttribute("customerid", record.customerID);
-                  card.setAttribute("price", record.price);
-                  card.setAttribute("paymentmethod", record.paymentMethod);
-                  card.setAttribute("totalamount", record.totalAmount);
-                  resultArea.appendChild(card);
-                });
-              } catch (err) {
-                resultArea.innerHTML = `<p>Error loading records: ${err.message}</p>`;
-              }
-            });
-          } catch (err) {
-            output.innerHTML = `<p>Error loading payment methods: ${err.message}</p>`;
-          }
-        });
-    </script>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </body>
 </html>
