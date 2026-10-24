@@ -4,6 +4,8 @@ An interactive sales dashboard for a dataset of **100,000 retail transactions** 
 
 **Live demo:** https://ethanyap123.github.io/retail-transaction-webapp/
 
+[![Deploy](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/deploy.yml/badge.svg)](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/deploy.yml)
+
 Started as my Fundamentals of Programming 2 (FOP2) assignment in Year 1, Semester 2 of the Diploma in Information Technology at Singapore Polytechnic, then rebuilt in Year 2 into a complete, deployable app.
 
 ![Dashboard](docs/screenshots/dashboard.png)
@@ -116,3 +118,7 @@ The original assignment endpoints are unchanged (numbers are now returned as num
 
 **Ethan Yap**, Diploma in Information Technology, Singapore Polytechnic
 [Portfolio](https://ethanyap123.github.io/portfolio/) · [GitHub](https://github.com/EthanYap123)
+
+## License
+
+[MIT](LICENSE)
