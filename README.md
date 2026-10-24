@@ -114,6 +114,11 @@ The original assignment endpoints are unchanged (numbers are now returned as num
 - Removed unused dependencies (`fs`, plus `node-fetch` and `readline-sync` left over from CA1).
 - Split the single inline script into modules and rebuilt the UI with the dashboard, table, filters, export and logging features above.
 
+## What I learned
+
+- Rebuilding my Year 1 code showed me how much hard-coding hurts: a fixed `localhost:8081` address and a hard-coded list of payment methods both broke as soon as anything changed.
+- Packing 100,000 rows into compact JSON let the whole dashboard run on GitHub Pages with no server.
+
 ## Author
 
 **Ethan Yap**, Diploma in Information Technology, Singapore Polytechnic
