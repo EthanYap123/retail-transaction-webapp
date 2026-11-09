@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Build data and check the app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies
+        run: npm ci
+        working-directory: server
+
+      # The same step the Pages deploy runs: CSV -> compact JSON for the web app.
+      - name: Build the static dataset
+        run: npm run build:data
+        working-directory: server
+
+      # No automated tests yet: check that the code parses, the page is valid
+      # and every local file the page loads exists.
+      - name: Check JavaScript syntax
+        run: for f in server/server.js server/lib/*.js server/scripts/*.js webapp/js/*.js webapp/js/components/*.js; do node --check "$f"; done
+
+      - name: Validate HTML
+        run: npx --yes html-validate@9.7.1 --preset standard webapp/index.html
+
+      - name: Check local links and assets
+        run: node .github/scripts/check-local-refs.mjs webapp/index.html
