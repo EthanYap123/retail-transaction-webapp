@@ -4,7 +4,7 @@ An interactive sales dashboard for a dataset of **100,000 retail transactions** 
 
 **Live demo:** https://ethanyap123.github.io/retail-transaction-webapp/
 
-[![Deploy](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/deploy.yml/badge.svg)](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/deploy.yml)
+[![CI](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/ci.yml/badge.svg)](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/ci.yml) [![Deploy](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/deploy.yml/badge.svg)](https://github.com/EthanYap123/retail-transaction-webapp/actions/workflows/deploy.yml)
 
 Started as my Fundamentals of Programming 2 (FOP2) assignment in Year 1, Semester 2 of the Diploma in Information Technology at Singapore Polytechnic, then rebuilt in Year 2 into a complete, deployable app.
 
@@ -33,6 +33,12 @@ Started as my Fundamentals of Programming 2 (FOP2) assignment in Year 1, Semeste
 - **Backend:** Node.js with Express and `csv-parse`. It serves the original REST endpoints and the web app.
 - **Deployment:** GitHub Actions builds the dataset and publishes `webapp/` to GitHub Pages.
 
+## Architecture
+
+The web app is a set of ES modules with no framework. It loads one compact JSON file holding all 100,000 transactions, and every chart, filter and table works on that data in the browser. New transactions logged in the form are saved to `localStorage` in the dataset's own format.
+
+The data file is built from the original CSV by `npm run build:data` (in `server/`). That means the same front end works in two ways: on GitHub Pages with no server at all, or served by the Express server, which also exposes the original assignment's API endpoints over the CSV.
+
 ## Project structure
 
 ```
@@ -55,7 +61,7 @@ webapp/
   js/components/transaction-card.js   <transaction-card> web component
 ```
 
-## Running locally
+## Getting started
 
 You need [Node.js](https://nodejs.org/) 18 or newer.
 
@@ -106,6 +112,12 @@ The original assignment endpoints are unchanged (numbers are now returned as num
 | `GET /data/transactions.json` | The whole dataset in the packed format used by the web app |
 | `GET /health` | Plain-text health check |
 
+## Testing and CI
+
+There is no automated test suite yet.
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push to `main` and every pull request: it installs the server, builds the dataset, checks every server and browser script parses, validates the HTML and fails if the page loads a local file that doesn't exist. [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds the dataset and deploys `webapp/` to GitHub Pages on every push to `main`.
+
 ## What changed from the original assignment
 
 - Fixed the data loading: the CSV path now works from any folder, `quantity`, `no` and `customerID` are parsed as numbers, and a failed load stops the server with a clear message instead of leaving it half-started.
@@ -113,6 +125,11 @@ The original assignment endpoints are unchanged (numbers are now returned as num
 - Read payment methods from the data instead of a hard-coded list, and escaped all data before inserting it into the page.
 - Removed unused dependencies (`fs`, plus `node-fetch` and `readline-sync` left over from CA1).
 - Split the single inline script into modules and rebuilt the UI with the dashboard, table, filters, export and logging features above.
+
+## What I'd improve next
+
+- Add unit tests for the filtering and aggregation code, so a change to a chart can't silently change its numbers.
+- Send logged transactions to the Express API instead of keeping them in one browser's `localStorage`.
 
 ## What I learned
 
